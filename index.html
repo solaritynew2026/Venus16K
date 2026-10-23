@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- Meta viewport corregido para permitir el zoom (pellizco) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solarity - Your Solar Partner</title>
+    
+    <!-- Tailwind CSS for rapid UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Lato -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Base Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrolling during loading */
+            font-family: 'Lato', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        /* --- Loading Screen Styles --- */
+        #loader-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff; /* Clean white background */
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+        }
+
+        /* Solar Animation Background (Ajustado para no cortarse en móviles) */
+        .solar-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .solar-core {
+            position: absolute;
+            width: min(60vw, 250px);
+            height: min(60vw, 250px);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(247, 142, 30, 0.15) 0%, rgba(247, 142, 30, 0) 70%);
+            animation: pulseCore 3s ease-in-out infinite alternate;
+        }
+
+        .solar-ring-1 {
+            position: absolute;
+            width: min(85vw, 420px);
+            height: min(85vw, 420px);
+            border-radius: 50%;
+            border: 2px dashed rgba(247, 142, 30, 0.5); /* Solarity Orange */
+            animation: spinRays 25s linear infinite;
+        }
+
+        .solar-ring-2 {
+            position: absolute;
+            width: min(105vw, 580px);
+            height: min(105vw, 580px);
+            border-radius: 50%;
+            border: 1px solid rgba(35, 31, 32, 0.08); /* Solarity Charcoal trace */
+            animation: spinRaysRev 35s linear infinite;
+        }
+        
+        .solar-ring-2::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #F78E1E;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #F78E1E;
+        }
+
+        @keyframes pulseCore {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 1; }
+        }
+
+        @keyframes spinRays { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        @keyframes spinRaysRev { 
+            0% { transform: rotate(360deg); } 
+            100% { transform: rotate(0deg); } 
+        }
+
+        /* Loader Foreground Content */
+        .loader-content {
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Logo ajustado para encajar bien dentro de los anillos */
+        .loader-content img {
+            max-width: 260px;
+            width: 70vw; 
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            animation: floatLogo 4s infinite ease-in-out;
+            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.15)); 
+        }
+
+        .loader-content .tagline {
+            font-weight: 400;
+            font-size: 1.15rem;
+            color: #231f20;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 0.5rem; /* Redujimos este valor para acercar el texto al logo */
+            opacity: 0;
+            animation: modernFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards 0.3s;
+        }
+
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes modernFadeIn {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(4px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        /* --- Main App Styles --- */
+        #main-app {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Iframe container */
+        .iframe-container {
+            flex-grow: 1;
+            width: 100%;
+            height: calc(100vh - 64px);
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #e2e8f0;
+        }
+
+        /* WhatsApp Button Entrance Animation */
+        .wa-btn-entrance {
+            opacity: 0;
+            transform: translateY(100px);
+            animation: slideUpBounce 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: 2.3s; 
+        }
+
+        @keyframes slideUpBounce {
+            0% { opacity: 0; transform: translateY(100px) scale(0.8); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Helper classes */
+        .fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+        
+        .fade-in {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .allow-scroll {
+            overflow: auto !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Loading Screen -->
+    <div id="loader-screen">
+        <!-- Solar Energy Animation -->
+        <div class="solar-container">
+            <div class="solar-ring-2"></div>
+            <div class="solar-ring-1"></div>
+            <div class="solar-core"></div>
+        </div>
+
+        <!-- Logo & Text -->
+        <div class="loader-content">
+            <img src="Solarity_Logo-01.png" alt="Solarity Logo">
+            <p class="tagline">Your solar partner</p>
+        </div>
+    </div>
+
+    <!-- Main Application UI -->
+    <main id="main-app">
+        
+        <!-- Header / Navigation Bar -->
+        <header class="h-16 bg-white shadow-sm flex items-center justify-center px-4 z-10 relative">
+            <div class="flex items-center">
+                <!-- Small Logo -->
+                <img src="Solarity_Logo-01.png" alt="Solarity Logo" class="h-6 md:h-8 object-contain">
+                
+                <!-- Vertical Divider -->
+                <div class="h-6 w-px bg-orange-500 mx-3 md:mx-4 opacity-70"></div>
+                
+                <!-- Title -->
+                <h1 class="text-base md:text-xl font-bold text-slate-800 tracking-wide truncate">Solarity Colombia</h1>
+            </div>
+        </header>
+
+<!-- PDF Viewer Area -->
+        <div class="iframe-container">
+            <!-- Usando el visor web de PDF.js para evitar descargas automáticas -->
+            <iframe 
+                id="pdf-viewer" 
+                src="https://mozilla.github.io/pdf.js/web/viewer.html?file=https://raw.githubusercontent.com/solaritynew2026/SolarityManual/main/SOLINA.pdf" 
+                title="Product PDF Document">
+            </iframe>
+        </div>
+        
+        <a href="https://wa.me/573107425916?text=¡Hola!%20Quiero%20saber%20sobre%20un%20producto%20de%20exposolar." target="_blank" rel="noopener noreferrer"
+        class="wa-btn-entrance fixed bottom-6 right-6 md:bottom-10 md:right-10 z-50 flex items-center gap-3 px-6 py-4 bg-[#25D366] hover:bg-[#1ebe57] text-white font-bold rounded-full shadow-[0_10px_25px_rgba(37,211,102,0.4)] hover:shadow-[0_15px_35px_rgba(37,211,102,0.6)] transform transition-all duration-300 hover:-translate-y-2">
+            
+            <!-- WhatsApp SVG Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.347-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.876 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            <span class="tracking-wider text-sm md:text-base">Consíguelo aquí</span>
+        </a>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loaderScreen = document.getElementById('loader-screen');
+            const mainApp = document.getElementById('main-app');
+
+            // Wait exactly 1.8 seconds before triggering the fade out
+            setTimeout(() => {
+                loaderScreen.classList.add('fade-out');
+                
+                // Wait for the CSS transition to finish before hiding the element
+                setTimeout(() => {
+                    loaderScreen.style.display = 'none';
+                    document.body.classList.add('allow-scroll'); // Re-enable normal scrolling
+                    mainApp.classList.add('fade-in'); // Display the PDF app visually
+                }, 600);
+
+            }, 1800);
+        });
+    </script>
+</body>
+</html>
